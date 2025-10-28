@@ -65,7 +65,7 @@ def forward_propagation(X, W, b):
 def cross_entropy_loss(Y, A):
     """Computes the error"""
     A_clipped = np.clip(A, 1e-12, 1.0)
-    total_loss = np.mean(np.sum(Y * np.log(A_clipped)))
+    total_loss = np.mean(np.sum(Y * np.log(A_clipped), axis=1))
     error = -total_loss
     return error
 
