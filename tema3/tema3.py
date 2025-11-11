@@ -74,7 +74,7 @@ def forward_propagation(X, W1, b1, W2, b2):
     A2 = softmax(Z2)
     return Z1, A1, Z2, A2
 
-def backward_and_update(X, Y, Z1, A1, A2, W1, b1, W2, b2, learning_rate, l2_lambda = 0.0):
+def backward_and_update(X, Y, Z1, A1, A2, W1, b1, W2, b2, learning_rate, l2_lambda):
     """Computes gradients and updates W and b."""
     m = X.shape[0]
     dZ2 = (A2 - Y)
@@ -143,7 +143,7 @@ for epoch in range(NUM_EPOCHS):
         epoch_loss += batch_loss
         num_batches += 1
 
-        # Validation (?)
+    # Validation
     loss = epoch_loss / num_batches
     _, A1_all, _, A_all = forward_propagation(X_train, W1, b1, W2, b2)
     current_accuracy = accuracy(Y_train, A_all)
