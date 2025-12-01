@@ -8,26 +8,18 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch import nn
 from torch import Tensor
-from torchvision import transforms
-from PIL import Image
+from torchvision.transforms import v2
 from tqdm import tqdm
 
 BATCH_SIZE = 64
 INPUT_SIZE = 784
 HIDDEN_SIZE_1 = 512
-HIDDEN_SIZE_2 = 256
+HIDDEN_SIZE_2 = 128
 OUTPUT_SIZE = 10
-NUM_EPOCHS = 30
+NUM_EPOCHS = 25
 DROPOUT_PROB = 0.1
 LEARNING_RATE = 0.001
 
-# Augumentations
-train_transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.RandomRotation(degrees=10),
-    transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
-    transforms.ToTensor(),
-])
 
 class ExtendedMNISTDataset(Dataset):
     # def __init__(self, root: str = "/kaggle/input/fii-nn-2025-homework-4", train: bool = True):
@@ -39,20 +31,22 @@ class ExtendedMNISTDataset(Dataset):
         file = os.path.join(root, file)
         with open(file, "rb") as fp:
             self.data = pickle.load(fp)
+        
+        images, labels = zip(*self.data)
+        images = np.array(images, dtype=np.float32)
+
+        images = torch.from_numpy(images) / 255.0
+
+        labels = torch.tensor(labels, dtype=torch.long)
+        
+        self.images = images
+        self.labels = labels
 
     def __len__(self, ) -> int:
         return len(self.data)
 
     def __getitem__(self, i : int):
-        image, label = self.data[i]
-        image = image.reshape(28, 28)
-        if self.train:
-            image = train_transform(image)
-        else:
-            image = torch.as_tensor(image, dtype=torch.float32) / 255.0
-        image = image.flatten()
-        label = torch.as_tensor(label, dtype=torch.long)
-        return image, label
+        return self.images[i], self.labels[i]
 
 # DataLoaders
 dataloader_train = DataLoader(ExtendedMNISTDataset(train=True), batch_size=BATCH_SIZE, shuffle=True)
@@ -153,8 +147,8 @@ def main(model, train_dataloader, optimizer, criterion, device, scheduler, num_e
         for epoch in tbar:
             train_loss = train(model, train_dataloader, optimizer, criterion, device)
             train_accuracy = evaluate_accuracy(model, train_dataloader, device)
+            tbar.set_description(f"Epoch {epoch+1}/{num_epochs}, Training Loss: {train_loss:.4f}%, Training Accuracy: {train_accuracy:.2f}%")
             scheduler.step()
-            tbar.set_description(f"Epoch {epoch+1}/{num_epochs}, Training Loss: {train_loss:.4f}, Training Accuracy: {train_accuracy:.2f}%")
 
 main(model, dataloader_train, optimizer, criterion, device, scheduler, NUM_EPOCHS)
 
